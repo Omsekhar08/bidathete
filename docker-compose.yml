@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: bidathlete-postgres
+    environment:
+      POSTGRES_DB: bidathlete
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bidathlete-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: bidathlete-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - bidathlete-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../infrastructure/docker/backend.Dockerfile
+    container_name: bidathlete-backend
+    environment:
+      NODE_ENV: development
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DATABASE: bidathlete
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: your-secret-key
+    ports:
+      - '3000:3000'
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - bidathlete-network
+    command: npm run start:dev
+
+  frontend:
+    build:
+      context: ./frontend-web
+      dockerfile: ../infrastructure/docker/frontend.Dockerfile
+    container_name: bidathlete-frontend
+    environment:
+      VITE_API_URL: http://localhost:3000/api/v1
+      VITE_WS_URL: http://localhost:3000
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./frontend-web:/app
+      - /app/node_modules
+    networks:
+      - bidathlete-network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  bidathlete-network:
+    driver: bridge
