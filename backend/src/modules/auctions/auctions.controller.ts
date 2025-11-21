@@ -19,18 +19,21 @@ export class AuctionsController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
+  @Roles('organizer')
   async create(@Body() body) {
     return { success: true, data: await this.auctionsService.create(body) };
   }
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
+  @Roles('organizer')
   async update(@Param('id') id: string, @Body() body) {
     return { success: true, data: await this.auctionsService.update(id, body) };
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
+  @Roles('organizer')
   async remove(@Param('id') id: string) {
     await this.auctionsService.remove(id);
     return { success: true };
@@ -38,12 +41,14 @@ export class AuctionsController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/start')
+  @Roles('organizer')
   async start(@Param('id') id: string) {
     return { success: true, data: await this.auctionsService.start(id) };
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/end')
+  @Roles('organizer')
   async end(@Param('id') id: string) {
     return { success: true, data: await this.auctionsService.end(id) };
   }

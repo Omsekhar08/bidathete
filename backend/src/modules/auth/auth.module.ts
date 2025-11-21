@@ -1,25 +1,27 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersModule } from '../users/users.module';
+import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { RevokedToken, RevokedTokenSchema } from './schemas/revoked-token.schema';
 
 @Module({
   imports: [
-    ConfigModule,
     UsersModule,
-    PassportModule.register({ defaultStrategy: 'jwt' }),
+    PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET') || 'secret',
-        signOptions: { expiresIn: config.get<string>('JWT_EXPIRES') || '3600s' },
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET', 'default_secret'),
+        signOptions: { expiresIn: '1h' },
       }),
       inject: [ConfigService],
     }),
+    MongooseModule.forFeature([{ name: RevokedToken.name, schema: RevokedTokenSchema }]),
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],

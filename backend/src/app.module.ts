@@ -14,26 +14,6 @@ import { SponsorsModule } from './modules/sponsors/sponsors.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
-import { Controller, Get } from '@nestjs/common';
-
-@Controller('api')
-export class SampleController {
-  @Get('teams')
-  getTeams() {
-    return [
-      { id: 'team1', name: 'Team Alpha', description: 'Sample team Alpha' },
-      { id: 'team2', name: 'Team Beta', description: 'Sample team Beta' },
-    ];
-  }
-
-  @Get('auctions')
-  getAuctions() {
-    return [
-      { id: 'auc1', title: 'Auction One', status: 'open' },
-      { id: 'auc2', title: 'Auction Two', status: 'closed' },
-    ];
-  }
-}
 
 @Module({
   imports: [
@@ -48,9 +28,6 @@ export class SampleController {
         uri:
           configService.get<string>('MONGODB_URI') ||
           `mongodb://${configService.get<string>('DB_HOST', 'localhost')}:${configService.get<string>('DB_PORT', '27017')}/${configService.get<string>('DB_DATABASE', 'bidathlete')}`,
-        // optional options:
-        // useNewUrlParser: true,
-        // useUnifiedTopology: true,
       }),
       inject: [ConfigService],
     }),
@@ -67,7 +44,7 @@ export class SampleController {
     PaymentsModule,
     NotificationsModule,
   ],
-  controllers: [AppController, SampleController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

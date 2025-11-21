@@ -1,3 +1,4 @@
+
 import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -8,9 +9,16 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Get('me')
-  async profile(@Req() req) {
-    return { success: true, data: await this.usersService.findById(req.user.id) };
+  @Put('me')
+  async updateProfile(@Req() req, @Body() body) {
+    return { success: true, data: await this.usersService.update(req.user.id, body) };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('me')
+  async deleteAccount(@Req() req) {
+    await this.usersService.remove(req.user.id);
+    return { success: true };
   }
 
   @UseGuards(JwtAuthGuard)

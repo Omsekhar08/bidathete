@@ -1,11 +1,18 @@
 import { Injectable, UnauthorizedException, ConflictException, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
+import { RevokedToken } from './schemas/revoked-token.schema';
 
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UsersService, private jwtService: JwtService) {}
+  constructor(
+    private usersService: UsersService,
+    private jwtService: JwtService,
+    @InjectModel(RevokedToken.name) private revokedTokenModel: Model<RevokedToken>,
+  ) {}
 
   async register(payload: { email: string; password: string; name?: string }) {
     const existing = await this.usersService.findByEmail(payload.email);
@@ -16,9 +23,6 @@ export class AuthService {
     return rest;
   }
 
-  // backward-compatible validateUser:
-  // - if second arg (password) provided: treat as email/password validation
-  // - if only one arg provided: treat as id lookup
   async validateUser(identifier: string, password?: string) {
     if (typeof password === 'string') {
       const user = await this.usersService.findByEmail(identifier);
@@ -28,7 +32,6 @@ export class AuthService {
       const { password: _p, ...safe } = user as any;
       return safe;
     } else {
-      // identifier is user id
       try {
         const user = await this.usersService.findById(identifier);
         const { password: _p, ...safe } = user as any;
@@ -39,7 +42,6 @@ export class AuthService {
     }
   }
 
-  // used by OAuth strategies
   async validateOAuthUser(profile: { email?: string; name?: string; id?: string }, provider: string) {
     if (!profile.email && !profile.id) throw new UnauthorizedException('OAuth profile missing identifier');
     const email = profile.email || `${provider}_${profile.id}@no-email.local`;
@@ -68,6 +70,9 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
+    const isRevoked = await this.revokedTokenModel.findOne({ token: refreshToken });
+    if (isRevoked) throw new UnauthorizedException('Invalid refresh token');
+
     try {
       const payload = this.jwtService.verify(refreshToken);
       const user = await this.usersService.findById(payload.sub);
@@ -78,7 +83,11 @@ export class AuthService {
     }
   }
 
-  // helper
+  async logout(refreshToken: string) {
+    await this.revokedTokenModel.create({ token: refreshToken });
+    return { success: true, message: 'Logged out successfully' };
+  }
+
   async findById(id: string) {
     try {
       return await this.usersService.findById(id);
