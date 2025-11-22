@@ -1,15 +1,17 @@
 {
   "expo": {
-    "name": "bidathlete-mobile",
+    "name": "bidathlete",
     "slug": "bidathlete-mobile",
     "version": "1.0.0",
+    "assetBundlePatterns": ["**/*"],
+    "entryPoint": "./index.js",
     "orientation": "portrait",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.bidathlete-mobile"
     },
-    "android": {},
-    "assetBundlePatterns": [
-      "**/*"
-    ]
+    "android": {
+      "package": "com.anonymous.bidathletemobile"
+    }
   }
 }

@@ -1,13 +1,22 @@
 import axios from 'axios';
 
+const API_BASE = (import.meta.env.VITE_API_URL as string) || 'http://localhost:3000';
+
+// axios instance used across the app
 const api = axios.create({
-  baseURL: (import.meta as any).env.VITE_API_URL || 'http://localhost:3000',
+  baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
 });
 
-export function setAuthToken(token: string | null) {
-  if (token) api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  else delete api.defaults.headers.common['Authorization'];
+// helper to set/remove auth token
+export function setAuthToken(token?: string | null) {
+  if (token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    localStorage.setItem('accessToken', token);
+  } else {
+    delete api.defaults.headers.common['Authorization'];
+    localStorage.removeItem('accessToken');
+  }
 }
 
 export default api;
